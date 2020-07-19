@@ -31,11 +31,6 @@ async def do_blinking(canvas, row, column, symbol='*'):
         await BlinkTimeout(0.3)
 
 
-async def light_the_star(canvas, row, column, symbol='*'):
-    star = do_blinking(canvas, row, column, symbol=symbol)
-    await star
-
-
 def get_stars(canvas):
     line_number, column_number = curses.LINES, curses.COLS
     window_square = line_number * column_number
@@ -43,7 +38,8 @@ def get_stars(canvas):
     for _ in range(int(window_square / 10)):
         star_line = random.randint(1, line_number - 1)
         star_column = random.randint(1, column_number - 1)
-        s = light_the_star(canvas, star_line, star_column)
+        star_symbol = random.choice('+*.:')
+        s = do_blinking(canvas, star_line, star_column, symbol=star_symbol)
         star_list.append(s)
 
     return star_list

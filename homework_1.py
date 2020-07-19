@@ -1,4 +1,3 @@
-import asyncio
 import time
 import curses
 import random
@@ -41,10 +40,9 @@ def get_stars(canvas):
     line_number, column_number = curses.LINES, curses.COLS
     window_square = line_number * column_number
     star_list = []
-    # for _ in range(int(window_square / 5)):
-    for _ in range(5):
-        star_line = random.randint(0, line_number)
-        star_column = random.randint(0, column_number)
+    for _ in range(int(window_square / 10)):
+        star_line = random.randint(1, line_number - 1)
+        star_column = random.randint(1, column_number - 1)
         s = light_the_star(canvas, star_line, star_column)
         star_list.append(s)
 
@@ -61,7 +59,7 @@ def draw(canvas):
             try:
                 blink_timeout = s.send(None)
             except StopIteration:
-                continue
+                break
         canvas.refresh()
         time.sleep(blink_timeout.timeout - TIC_TIMEOUT)
 

@@ -41,7 +41,7 @@ def get_stars(canvas):
         star_column = random.randint(2, column_number - 2)
         star_symbol = random.choice('+*.:')
         star = blink(canvas, star_line, star_column, symbol=star_symbol)
-        initial_lighting_time = round(time.time() + random.random(), 1)
+        initial_lighting_time = round(time.time() + random.random() * 1.9, 1)
         stars_per_blink_time[initial_lighting_time].append(star)
 
     return stars_per_blink_time
@@ -51,6 +51,8 @@ def draw(canvas):
     canvas.border()
     curses.curs_set(False)
     stars = get_stars(canvas)
+    [[star.send(None) for star in star_list] for star_list in stars.values()]
+    canvas.refresh()
 
     while True:
         current_time = round(time.time(), 1)

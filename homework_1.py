@@ -41,7 +41,7 @@ def get_stars(canvas):
         star_column = random.randint(2, column_number - 2)
         star_symbol = random.choice('+*.:')
         star = blink(canvas, star_line, star_column, symbol=star_symbol)
-        initial_lighting_time = round(time.time() + random.random() * 1.9, 1)
+        initial_lighting_time = round(time.time() + random.random() * 3, 1)
         stars_per_blink_time[initial_lighting_time].append(star)
 
     return stars_per_blink_time
@@ -59,8 +59,8 @@ def draw(canvas):
         lighting_stars = stars.pop(current_time, [])
         try:
             for star in lighting_stars:
-                blink_timeout = star.send(None)
-                next_light_time = current_time + blink_timeout.seconds - TIC_TIMEOUT
+                blink_timeout = star.send(None).seconds - TIC_TIMEOUT
+                next_light_time = current_time + blink_timeout
                 stars[round(next_light_time, 1)].append(star)
         except StopIteration:
             break

@@ -1,3 +1,4 @@
+import asyncio
 import time
 from collections import defaultdict
 import curses
@@ -32,6 +33,36 @@ async def blink(canvas, row, column, symbol='*'):
         await BlinkTimeout(0.3)
 
 
+async def fire(canvas, start_row, start_column, rows_speed=-0.3, columns_speed=0):
+    """Display animation of gun shot, direction and speed can be specified."""
+
+    row, column = start_row, start_column
+
+    canvas.addstr(round(row), round(column), '*')
+    await asyncio.sleep(0)
+
+    canvas.addstr(round(row), round(column), 'O')
+    await asyncio.sleep(0)
+    canvas.addstr(round(row), round(column), ' ')
+
+    row += rows_speed
+    column += columns_speed
+
+    symbol = '-' if columns_speed else '|'
+
+    rows, columns = canvas.getmaxyx()
+    max_row, max_column = rows - 1, columns - 1
+
+    curses.beep()
+
+    while 0 < row < max_row and 0 < column < max_column:
+        canvas.addstr(round(row), round(column), symbol)
+        await BlinkTimeout(0.1)
+        canvas.addstr(round(row), round(column), ' ')
+        row += rows_speed
+        column += columns_speed
+
+
 def get_stars(canvas):
     line_number, column_number = curses.LINES, curses.COLS
     window_square = line_number * column_number
@@ -52,10 +83,15 @@ def draw(canvas):
     curses.curs_set(False)
     stars = get_stars(canvas)
     [[star.send(None) for star in star_list] for star_list in stars.values()]
+    shot = fire(canvas, curses.LINES / 2, curses.COLS / 2)
+    shot.send(None)
+    shot.send(None)
     canvas.refresh()
+    stars[round(time.time() + 0.5)].append(shot)
 
     while True:
         current_time = round(time.time(), 1)
+        canvas.addstr(3, 3, str(current_time))
         lighting_stars = stars.pop(current_time, [])
         try:
             for star in lighting_stars:

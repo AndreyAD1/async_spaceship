@@ -39,10 +39,10 @@ async def fire(canvas, start_row, start_column, rows_speed=-0.3, columns_speed=0
     row, column = start_row, start_column
 
     canvas.addstr(round(row), round(column), '*')
-    await asyncio.sleep(0)
+    await BlinkTimeout(0.4)
 
     canvas.addstr(round(row), round(column), 'O')
-    await asyncio.sleep(0)
+    await BlinkTimeout(0.3)
     canvas.addstr(round(row), round(column), ' ')
 
     row += rows_speed
@@ -57,14 +57,14 @@ async def fire(canvas, start_row, start_column, rows_speed=-0.3, columns_speed=0
 
     while 0 < row < max_row and 0 < column < max_column:
         canvas.addstr(round(row), round(column), symbol)
-        await BlinkTimeout(0.1)
+        await BlinkTimeout(0.2)
         canvas.addstr(round(row), round(column), ' ')
         row += rows_speed
         column += columns_speed
 
 
 def get_stars(canvas):
-    line_number, column_number = curses.LINES, curses.COLS
+    line_number, column_number = canvas.getmaxyx()
     window_square = line_number * column_number
     stars_per_blink_time = defaultdict(list)
     for _ in range(int(window_square / 10)):
@@ -81,25 +81,24 @@ def get_stars(canvas):
 def draw(canvas):
     canvas.border()
     curses.curs_set(False)
-    stars = get_stars(canvas)
-    [[star.send(None) for star in star_list] for star_list in stars.values()]
+    coroutines = get_stars(canvas)
+    [[star.send(None) for star in c_list] for c_list in coroutines.values()]
     shot = fire(canvas, curses.LINES / 2, curses.COLS / 2)
-    shot.send(None)
-    shot.send(None)
     canvas.refresh()
-    stars[round(time.time() + 0.5)].append(shot)
+    coroutines[round(time.time() + 0.1)].append(shot)
 
     while True:
         current_time = round(time.time(), 1)
         canvas.addstr(3, 3, str(current_time))
-        lighting_stars = stars.pop(current_time, [])
+        coroutines_to_work = coroutines.pop(current_time, [])
         try:
-            for star in lighting_stars:
-                blink_timeout = star.send(None).seconds - TIC_TIMEOUT
+            for coroutine in coroutines_to_work:
+                blink_timeout = coroutine.send(None).seconds - TIC_TIMEOUT
                 next_light_time = current_time + blink_timeout
-                stars[round(next_light_time, 1)].append(star)
+                coroutines[round(next_light_time, 1)].append(coroutine)
         except StopIteration:
-            break
+            canvas.border()
+            continue
         canvas.refresh()
         time.sleep(0.01)
 

@@ -7,34 +7,23 @@ import random
 TIC_TIMEOUT = 0.1
 
 
-class EventLoopCommand:
-    def __await__(self):
-        return (yield self)
-
-
-class BlinkTimeout(EventLoopCommand):
-    def __init__(self, timeout):
-        self.timeout = timeout
-
-
-async def do_blinking(canvas, row, column, symbol='*'):
+async def blink(canvas, row, column, symbol='*'):
     while True:
         canvas.addstr(row, column, symbol, curses.A_DIM)
-        await BlinkTimeout(2)
+        for _ in range(20):
+            await asyncio.sleep(0)
 
         canvas.addstr(row, column, symbol)
-        await BlinkTimeout(0.3)
+        for _ in range(3):
+            await asyncio.sleep(0)
 
         canvas.addstr(row, column, symbol, curses.A_BOLD)
-        await BlinkTimeout(0.5)
+        for _ in range(5):
+            await asyncio.sleep(0)
 
         canvas.addstr(row, column, symbol)
-        await BlinkTimeout(0.3)
-
-
-async def light_the_star(canvas, row, column, symbol='*'):
-    star = do_blinking(canvas, row, column, symbol=symbol)
-    await star
+        for _ in range(3):
+            await asyncio.sleep(0)
 
 
 def get_stars(canvas):
@@ -43,9 +32,9 @@ def get_stars(canvas):
     star_list = []
     # for _ in range(int(window_square / 5)):
     for _ in range(5):
-        star_line = random.randint(0, line_number)
-        star_column = random.randint(0, column_number)
-        s = light_the_star(canvas, star_line, star_column)
+        star_line = random.randint(1, line_number)
+        star_column = random.randint(1, column_number)
+        s = blink(canvas, star_line, star_column)
         star_list.append(s)
 
     return star_list
@@ -59,11 +48,11 @@ def draw(canvas):
     while True:
         for s in stars:
             try:
-                blink_timeout = s.send(None)
+                s.send(None)
             except StopIteration:
                 continue
         canvas.refresh()
-        time.sleep(blink_timeout.timeout - TIC_TIMEOUT)
+        time.sleep(0.1)
 
 
 if __name__ == '__main__':

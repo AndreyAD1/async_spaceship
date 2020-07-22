@@ -26,24 +26,29 @@ async def blink(canvas, row, column, symbol='*'):
             await asyncio.sleep(0)
 
 
-def get_stars(canvas):
-    line_number, column_number = curses.LINES, curses.COLS
+def get_stars(canvas, line_number, column_number):
     window_square = line_number * column_number
-    star_list = []
-    # for _ in range(int(window_square / 5)):
-    for _ in range(5):
-        star_line = random.randint(1, line_number)
-        star_column = random.randint(1, column_number)
-        s = blink(canvas, star_line, star_column)
-        star_list.append(s)
+    stars = []
+    used_coords = []
+    for _ in range(int(window_square / 10)):
+        while True:
+            star_line = random.randint(1, line_number - 2)
+            star_column = random.randint(1, column_number - 2)
+            if (star_line, star_column) not in used_coords:
+                break
+        star_symbol = random.choice('+*.:')
+        star = blink(canvas, star_line, star_column, symbol=star_symbol)
+        used_coords.append((star_line, star_column))
+        stars.append(star)
 
-    return star_list
+    return stars
 
 
 def draw(canvas):
     canvas.border()
     curses.curs_set(False)
-    stars = get_stars(canvas)
+    line_number, column_number = canvas.getmaxyx()
+    stars = get_stars(canvas, line_number, column_number)
 
     while True:
         for s in stars:
@@ -52,7 +57,7 @@ def draw(canvas):
             except StopIteration:
                 continue
         canvas.refresh()
-        time.sleep(0.1)
+        time.sleep(TIC_TIMEOUT)
 
 
 if __name__ == '__main__':

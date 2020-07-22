@@ -8,29 +8,27 @@ import random
 TIC_TIMEOUT = 0.1
 
 
-class EventLoopCommand:
-    def __await__(self):
-        return (yield self)
-
-
-class BlinkTimeout(EventLoopCommand):
+class Timeout:
     def __init__(self, seconds):
         self.seconds = seconds
+
+    def __await__(self):
+        return (yield self)
 
 
 async def blink(canvas, row, column, symbol='*'):
     while True:
         canvas.addstr(row, column, symbol, curses.A_DIM)
-        await BlinkTimeout(2)
+        await Timeout(2)
 
         canvas.addstr(row, column, symbol)
-        await BlinkTimeout(0.3)
+        await Timeout(0.3)
 
         canvas.addstr(row, column, symbol, curses.A_BOLD)
-        await BlinkTimeout(0.5)
+        await Timeout(0.5)
 
         canvas.addstr(row, column, symbol)
-        await BlinkTimeout(0.3)
+        await Timeout(0.3)
 
 
 async def fire(canvas, start_row, start_column, rows_speed=-0.3, columns_speed=0):
@@ -39,10 +37,10 @@ async def fire(canvas, start_row, start_column, rows_speed=-0.3, columns_speed=0
     row, column = start_row, start_column
 
     canvas.addstr(round(row), round(column), '*')
-    await BlinkTimeout(0.4)
+    await Timeout(0.4)
 
     canvas.addstr(round(row), round(column), 'O')
-    await BlinkTimeout(0.3)
+    await Timeout(0.3)
     canvas.addstr(round(row), round(column), ' ')
 
     row += rows_speed
@@ -57,19 +55,18 @@ async def fire(canvas, start_row, start_column, rows_speed=-0.3, columns_speed=0
 
     while 0 < row < max_row and 0 < column < max_column:
         canvas.addstr(round(row), round(column), symbol)
-        await BlinkTimeout(0.2)
+        await Timeout(0.2)
         canvas.addstr(round(row), round(column), ' ')
         row += rows_speed
         column += columns_speed
 
 
-def get_stars(canvas):
-    line_number, column_number = canvas.getmaxyx()
+def get_stars(canvas, line_number, column_number):
     window_square = line_number * column_number
     stars_per_blink_time = defaultdict(list)
     for _ in range(int(window_square / 10)):
-        star_line = random.randint(2, line_number - 2)
-        star_column = random.randint(2, column_number - 2)
+        star_line = random.randint(1, line_number - 2)
+        star_column = random.randint(1, column_number - 2)
         star_symbol = random.choice('+*.:')
         star = blink(canvas, star_line, star_column, symbol=star_symbol)
         initial_lighting_time = round(time.time() + random.random() * 3, 1)
@@ -81,9 +78,10 @@ def get_stars(canvas):
 def draw(canvas):
     canvas.border()
     curses.curs_set(False)
-    coroutines = get_stars(canvas)
+    line_number, column_number = canvas.getmaxyx()
+    coroutines = get_stars(canvas, line_number, column_number)
     [[star.send(None) for star in c_list] for c_list in coroutines.values()]
-    shot = fire(canvas, curses.LINES / 2, curses.COLS / 2)
+    shot = fire(canvas, line_number / 2, column_number / 2)
     canvas.refresh()
     coroutines[round(time.time() + 0.1)].append(shot)
 

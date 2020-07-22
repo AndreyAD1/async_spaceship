@@ -64,11 +64,16 @@ async def fire(canvas, start_row, start_column, rows_speed=-0.3, columns_speed=0
 def get_stars(canvas, line_number, column_number):
     window_square = line_number * column_number
     stars_per_blink_time = defaultdict(list)
+    used_coords = []
     for _ in range(int(window_square / 10)):
-        star_line = random.randint(1, line_number - 2)
-        star_column = random.randint(1, column_number - 2)
+        while True:
+            star_line = random.randint(1, line_number - 2)
+            star_column = random.randint(1, column_number - 2)
+            if (star_line, star_column) not in used_coords:
+                break
         star_symbol = random.choice('+*.:')
         star = blink(canvas, star_line, star_column, symbol=star_symbol)
+        used_coords.append((star_line, star_column))
         initial_lighting_time = round(time.time() + random.random() * 3, 1)
         stars_per_blink_time[initial_lighting_time].append(star)
 
@@ -87,7 +92,6 @@ def draw(canvas):
 
     while True:
         current_time = round(time.time(), 1)
-        canvas.addstr(3, 3, str(current_time))
         coroutines_to_work = coroutines.pop(current_time, [])
         try:
             for coroutine in coroutines_to_work:

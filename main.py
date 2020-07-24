@@ -1,7 +1,11 @@
 import asyncio
-import time
 import curses
+from itertools import cycle
+import os.path
 import random
+import time
+
+from curses_tools import draw_frame
 
 
 TIC_TIMEOUT = 0.1
@@ -60,6 +64,13 @@ async def fire(canvas, start_row, start_column, rows_speed=-0.3, columns_speed=0
         column += columns_speed
 
 
+async def animate_spaceship(canvas, start_row, start_column, animation_frames):
+    for frame in cycle(animation_frames):
+        draw_frame(canvas, start_row, start_column, frame)
+        await asyncio.sleep(0)
+        draw_frame(canvas, start_row, start_column, frame, negative=True)
+
+
 def get_stars(canvas, line_number, column_number):
     window_square = line_number * column_number
     stars = []
@@ -78,13 +89,33 @@ def get_stars(canvas, line_number, column_number):
     return stars
 
 
+def get_spaceship_frames():
+    file_names = ['rocket_frame_1.txt', 'rocket_frame_2.txt']
+    frames = []
+
+    for file_name in file_names:
+        file_path = os.path.join('animation', file_name)
+        with open(file_path, 'r') as file:
+            frame = file.read()
+        frames.append(frame)
+
+    return frames
+
+
 def draw(canvas):
     canvas.border()
     curses.curs_set(False)
     line_number, column_number = canvas.getmaxyx()
     stars = get_stars(canvas, line_number, column_number)
     shot = fire(canvas, line_number / 2, column_number / 2)
-    coroutines = [shot, *stars]
+    spaceship_frames = get_spaceship_frames()
+    spaceship = animate_spaceship(
+        canvas,
+        line_number / 2,
+        column_number / 2,
+        spaceship_frames
+    )
+    coroutines = [shot, *stars, spaceship]
 
     while True:
         for s in coroutines.copy():

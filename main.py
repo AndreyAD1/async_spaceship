@@ -5,7 +5,7 @@ import os.path
 import random
 import time
 
-from curses_tools import draw_frame
+from curses_tools import draw_frame, read_controls
 
 
 TIC_TIMEOUT = 0.1
@@ -65,10 +65,17 @@ async def fire(canvas, start_row, start_column, rows_speed=-0.3, columns_speed=0
 
 
 async def animate_spaceship(canvas, start_row, start_column, animation_frames):
+    cancellation_number = 0
     for frame in cycle(animation_frames):
-        draw_frame(canvas, start_row, start_column, frame)
-        await asyncio.sleep(0)
-        draw_frame(canvas, start_row, start_column, frame, negative=True)
+        try:
+            draw_frame(canvas, start_row, start_column, frame)
+            await asyncio.sleep(0)
+            draw_frame(canvas, start_row, start_column, frame, negative=True)
+        except asyncio.CancelledError:
+            draw_frame(canvas, start_row, start_column, frame, negative=True)
+            cancellation_number += 1
+            if cancellation_number == 2:
+                break
 
 
 def get_stars(canvas, line_number, column_number):
@@ -103,19 +110,16 @@ def get_spaceship_frames():
 
 
 def draw(canvas):
+    canvas.nodelay(True)
     canvas.border()
     curses.curs_set(False)
     line_number, column_number = canvas.getmaxyx()
+    line, column = line_number / 2, column_number / 2
     stars = get_stars(canvas, line_number, column_number)
-    shot = fire(canvas, line_number / 2, column_number / 2)
+    shot = fire(canvas, line, column)
     spaceship_frames = get_spaceship_frames()
-    spaceship = animate_spaceship(
-        canvas,
-        line_number / 2,
-        column_number / 2,
-        spaceship_frames
-    )
-    coroutines = [shot, *stars, spaceship]
+    spaceship = animate_spaceship(canvas, line, column, spaceship_frames)
+    coroutines = [shot, *stars]
 
     while True:
         for s in coroutines.copy():
@@ -124,6 +128,17 @@ def draw(canvas):
             except StopIteration:
                 coroutines.remove(s)
                 canvas.border()
+
+        spaceship.send(None)
+        rows_dir, columns_dir, space_pressed = read_controls(canvas)
+        if rows_dir or columns_dir:
+            line += rows_dir
+            column += columns_dir
+            try:
+                spaceship.throw(asyncio.CancelledError)
+            except StopIteration:
+                spaceship = animate_spaceship(canvas, line, column, spaceship_frames)
+                spaceship.send(None)
         canvas.refresh()
         time.sleep(TIC_TIMEOUT)
 

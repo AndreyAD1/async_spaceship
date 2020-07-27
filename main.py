@@ -8,7 +8,7 @@ import time
 from curses_tools import draw_frame, read_controls, get_frame_size
 
 
-TIC_TIMEOUT = 0.05
+TIC_TIMEOUT = 0.1
 
 
 async def blink(canvas, row, column, symbol='*'):

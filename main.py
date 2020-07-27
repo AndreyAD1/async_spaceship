@@ -5,7 +5,7 @@ import os.path
 import random
 import time
 
-from curses_tools import draw_frame, read_controls
+from curses_tools import draw_frame, read_controls, get_frame_size
 
 
 TIC_TIMEOUT = 0.05
@@ -115,6 +115,9 @@ def draw(canvas):
     stars = get_stars(canvas, row_number, column_number)
     shot = fire(canvas, row, column)
     spaceship_frames = get_spaceship_frames()
+    frame_sizes = [get_frame_size(frame) for frame in spaceship_frames]
+    max_ship_height = max(frame_sizes, key=lambda x: x[0])[0]
+    max_ship_width = max(frame_sizes, key=lambda x: x[1])[1]
     spaceship = animate_spaceship(canvas, row, column, spaceship_frames)
     coroutines = [shot, *stars]
 
@@ -124,13 +127,21 @@ def draw(canvas):
                 s.send(None)
             except StopIteration:
                 coroutines.remove(s)
-                canvas.border()
 
         rows_dir, columns_dir, space_pressed = read_controls(canvas)
         if rows_dir or columns_dir:
             new_row = row + rows_dir
             new_column = column + columns_dir
-            if not min([new_row, new_column]) <= 0:
+            jutted_left_or_upper_edge = min([new_row, new_column]) <= 0
+            jutted_lower_edge = new_row + max_ship_height > row_number
+            jutted_right_edge = new_column + max_ship_width > column_number - 1
+            spaceship_is_outside_canvas = any([
+                    jutted_left_or_upper_edge,
+                    jutted_lower_edge,
+                    jutted_right_edge
+                ]
+            )
+            if not spaceship_is_outside_canvas:
                 row, column = new_row, new_column
                 try:
                     spaceship.throw(asyncio.CancelledError)
@@ -144,6 +155,7 @@ def draw(canvas):
                     )
 
         spaceship.send(None)
+        canvas.border()
         canvas.refresh()
         time.sleep(TIC_TIMEOUT)
 

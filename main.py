@@ -8,7 +8,7 @@ import time
 from curses_tools import draw_frame, read_controls
 
 
-TIC_TIMEOUT = 0.1
+TIC_TIMEOUT = 0.05
 
 
 async def blink(canvas, row, column, symbol='*'):
@@ -110,12 +110,12 @@ def draw(canvas):
     canvas.nodelay(True)
     canvas.border()
     curses.curs_set(False)
-    line_number, column_number = canvas.getmaxyx()
-    line, column = line_number / 2, column_number / 2
-    stars = get_stars(canvas, line_number, column_number)
-    shot = fire(canvas, line, column)
+    row_number, column_number = canvas.getmaxyx()
+    row, column = row_number / 2, column_number / 2
+    stars = get_stars(canvas, row_number, column_number)
+    shot = fire(canvas, row, column)
     spaceship_frames = get_spaceship_frames()
-    spaceship = animate_spaceship(canvas, line, column, spaceship_frames)
+    spaceship = animate_spaceship(canvas, row, column, spaceship_frames)
     coroutines = [shot, *stars]
 
     while True:
@@ -128,18 +128,20 @@ def draw(canvas):
 
         rows_dir, columns_dir, space_pressed = read_controls(canvas)
         if rows_dir or columns_dir:
-            line += rows_dir
-            column += columns_dir
-            try:
-                spaceship.throw(asyncio.CancelledError)
-            except StopIteration:
-                spaceship_frames.append(spaceship_frames.pop(0))
-                spaceship = animate_spaceship(
-                    canvas,
-                    line,
-                    column,
-                    spaceship_frames
-                )
+            new_row = row + rows_dir
+            new_column = column + columns_dir
+            if not min([new_row, new_column]) <= 0:
+                row, column = new_row, new_column
+                try:
+                    spaceship.throw(asyncio.CancelledError)
+                except StopIteration:
+                    spaceship_frames.append(spaceship_frames.pop(0))
+                    spaceship = animate_spaceship(
+                        canvas,
+                        row,
+                        column,
+                        spaceship_frames
+                    )
 
         spaceship.send(None)
         canvas.refresh()

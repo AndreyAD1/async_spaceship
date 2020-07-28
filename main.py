@@ -129,30 +129,30 @@ def draw(canvas):
                 coroutines.remove(s)
 
         rows_dir, columns_dir, space_pressed = read_controls(canvas)
-        if rows_dir or columns_dir:
-            new_row = row + rows_dir
-            new_column = column + columns_dir
-            jutted_left_or_upper_edge = min([new_row, new_column]) <= 0
-            jutted_lower_edge = new_row + max_ship_height > row_number
-            jutted_right_edge = new_column + max_ship_width > column_number - 1
-            spaceship_is_outside_canvas = any([
-                    jutted_left_or_upper_edge,
-                    jutted_lower_edge,
-                    jutted_right_edge
-                ]
-            )
-            if not spaceship_is_outside_canvas:
-                row, column = new_row, new_column
-                try:
-                    spaceship.throw(asyncio.CancelledError)
-                except StopIteration:
-                    spaceship_frames.append(spaceship_frames.pop(0))
-                    spaceship = animate_spaceship(
-                        canvas,
-                        row,
-                        column,
-                        spaceship_frames
-                    )
+        new_row = row + rows_dir
+        new_column = column + columns_dir
+        if new_row <= 0:
+            new_row = 1
+        if new_column <= 0:
+            new_column = 1
+        if new_row + max_ship_height > row_number:
+            new_row = row_number - max_ship_height
+        if new_column + max_ship_width > column_number - 1:
+            new_column = column_number - 1 - max_ship_width
+
+        spaceship_moves = (row, column) != (new_row, new_column)
+        if spaceship_moves:
+            row, column = new_row, new_column
+            try:
+                spaceship.throw(asyncio.CancelledError)
+            except StopIteration:
+                spaceship_frames.append(spaceship_frames.pop(0))
+                spaceship = animate_spaceship(
+                    canvas,
+                    row,
+                    column,
+                    spaceship_frames
+                )
 
         spaceship.send(None)
         canvas.border()

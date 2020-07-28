@@ -135,8 +135,8 @@ def draw(canvas):
             new_row = 1
         if new_column <= 0:
             new_column = 1
-        if new_row + max_ship_height > row_number:
-            new_row = row_number - max_ship_height
+        if new_row + max_ship_height > row_number - 1:
+            new_row = row_number - 1 - max_ship_height
         if new_column + max_ship_width > column_number - 1:
             new_column = column_number - 1 - max_ship_width
 

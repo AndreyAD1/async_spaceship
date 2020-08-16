@@ -122,11 +122,11 @@ def draw(canvas):
     coroutines = [shot, *stars]
 
     while True:
-        for s in coroutines.copy():
+        for coroutine in coroutines.copy():
             try:
-                s.send(None)
+                coroutine.send(None)
             except StopIteration:
-                coroutines.remove(s)
+                coroutines.remove(coroutine)
 
         rows_dir, columns_dir, space_pressed = read_controls(canvas)
         new_row = row + rows_dir
@@ -154,7 +154,7 @@ def draw(canvas):
                     spaceship_frames
                 )
 
-        spaceship.send(None)
+        spaceshipgit .send(None)
         canvas.border()
         canvas.refresh()
         time.sleep(TIC_TIMEOUT)

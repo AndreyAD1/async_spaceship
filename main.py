@@ -154,7 +154,7 @@ def draw(canvas):
                     spaceship_frames
                 )
 
-        spaceshipgit .send(None)
+        spaceship.send(None)
         canvas.border()
         canvas.refresh()
         time.sleep(TIC_TIMEOUT)

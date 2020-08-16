@@ -65,14 +65,28 @@ async def fire(canvas, start_row, start_column, rows_speed=-0.3, columns_speed=0
 
 
 async def animate_spaceship(canvas, start_row, start_column, animation_frames):
+    row_number, column_number = canvas.getmaxyx()
+    frame_sizes = [get_frame_size(frame) for frame in animation_frames]
+    max_ship_height = max(frame_sizes, key=lambda x: x[0])[0]
+    max_ship_width = max(frame_sizes, key=lambda x: x[1])[1]
+
     for frame in cycle(animation_frames):
-        try:
-            draw_frame(canvas, start_row, start_column, frame)
-            await asyncio.sleep(0)
-            draw_frame(canvas, start_row, start_column, frame, negative=True)
-        except asyncio.CancelledError:
-            draw_frame(canvas, start_row, start_column, frame, negative=True)
-            break
+        rows_dir, columns_dir, space_pressed = read_controls(canvas)
+        new_row = start_row + rows_dir
+        new_column = start_column + columns_dir
+        if new_row <= 0:
+            new_row = 1
+        if new_column <= 0:
+            new_column = 1
+        if new_row + max_ship_height > row_number - 1:
+            new_row = row_number - 1 - max_ship_height
+        if new_column + max_ship_width > column_number - 1:
+            new_column = column_number - 1 - max_ship_width
+
+        start_row, start_column = new_row, new_column
+        draw_frame(canvas, new_row, new_column, frame)
+        await asyncio.sleep(0)
+        draw_frame(canvas, new_row, new_column, frame, negative=True)
 
 
 def get_stars(canvas, line_number, column_number):
@@ -115,9 +129,6 @@ def draw(canvas):
     stars = get_stars(canvas, row_number, column_number)
     shot = fire(canvas, row, column)
     spaceship_frames = get_spaceship_frames()
-    frame_sizes = [get_frame_size(frame) for frame in spaceship_frames]
-    max_ship_height = max(frame_sizes, key=lambda x: x[0])[0]
-    max_ship_width = max(frame_sizes, key=lambda x: x[1])[1]
     spaceship = animate_spaceship(canvas, row, column, spaceship_frames)
     coroutines = [shot, *stars]
 
@@ -127,32 +138,6 @@ def draw(canvas):
                 coroutine.send(None)
             except StopIteration:
                 coroutines.remove(coroutine)
-
-        rows_dir, columns_dir, space_pressed = read_controls(canvas)
-        new_row = row + rows_dir
-        new_column = column + columns_dir
-        if new_row <= 0:
-            new_row = 1
-        if new_column <= 0:
-            new_column = 1
-        if new_row + max_ship_height > row_number - 1:
-            new_row = row_number - 1 - max_ship_height
-        if new_column + max_ship_width > column_number - 1:
-            new_column = column_number - 1 - max_ship_width
-
-        spaceship_moves = (row, column) != (new_row, new_column)
-        if spaceship_moves:
-            row, column = new_row, new_column
-            try:
-                spaceship.throw(asyncio.CancelledError)
-            except StopIteration:
-                spaceship_frames.append(spaceship_frames.pop(0))
-                spaceship = animate_spaceship(
-                    canvas,
-                    row,
-                    column,
-                    spaceship_frames
-                )
 
         spaceship.send(None)
         canvas.border()

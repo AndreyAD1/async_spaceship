@@ -12,6 +12,7 @@ TIC_TIMEOUT = 0.1
 MIN_TIC_OFFSET = 1
 MAX_TIC_OFFSET = 30
 ANIMATION_REPEAT_RATE = 2
+BORDER_SIZE = 1
 
 
 async def blink(canvas, row, column, offset_tics, symbol='*'):
@@ -75,19 +76,19 @@ async def animate_spaceship(canvas, start_row, start_column, animation_frames):
     doubled_frames = [
         f for f in animation_frames for _ in range(ANIMATION_REPEAT_RATE)
     ]
+    max_row = row_number - BORDER_SIZE
+    max_column = column_number - BORDER_SIZE
 
     for frame in cycle(doubled_frames):
         rows_dir, columns_dir, space_pressed = read_controls(canvas)
         new_row = start_row + rows_dir
         new_column = start_column + columns_dir
-        if new_row <= 0:
-            new_row = 1
-        if new_column <= 0:
-            new_column = 1
-        if new_row + max_ship_height > row_number - 1:
-            new_row = row_number - 1 - max_ship_height
-        if new_column + max_ship_width > column_number - 1:
-            new_column = column_number - 1 - max_ship_width
+        frame_max_row = new_row + max_ship_height
+        frame_max_column = new_column + max_ship_width
+        new_row = min(frame_max_row, max_row) - max_ship_height
+        new_column = min(frame_max_column, max_column) - max_ship_width
+        new_row = max(new_row, BORDER_SIZE)
+        new_column = max(new_column, BORDER_SIZE)
 
         start_row, start_column = new_row, new_column
         draw_frame(canvas, start_row, start_column, frame)

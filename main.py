@@ -100,11 +100,11 @@ def get_stars(canvas, line_number, column_number):
     stars = []
     used_coords = []
     first_line, first_column = 1, 1
-    last_line, last_column = line_number - 1, column_number - 1
+    last_active_line, last_active_column = line_number - 2, column_number - 2
     for _ in range(int(window_square / 10)):
         while True:
-            star_line = random.randint(first_line, last_line)
-            star_column = random.randint(first_column, last_column)
+            star_line = random.randint(first_line, last_active_line)
+            star_column = random.randint(first_column, last_active_column)
             if (star_line, star_column) not in used_coords:
                 break
         star_symbol = random.choice('+*.:')
@@ -153,7 +153,6 @@ def draw(canvas):
             except StopIteration:
                 coroutines.remove(coroutine)
 
-        canvas.border()
         canvas.refresh()
         time.sleep(TIC_TIMEOUT)
 

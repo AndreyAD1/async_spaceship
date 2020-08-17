@@ -11,9 +11,9 @@ from curses_tools import draw_frame, read_controls, get_frame_size
 TIC_TIMEOUT = 0.1
 
 
-async def blink(canvas, row, column, symbol='*'):
+async def blink(canvas, row, column, offset_tics, symbol='*'):
     canvas.addstr(row, column, symbol, curses.A_DIM)
-    for _ in range(random.randint(1, 30)):
+    for _ in range(offset_tics):
         await asyncio.sleep(0)
 
     while True:
@@ -101,7 +101,13 @@ def get_stars(canvas, line_number, column_number):
             if (star_line, star_column) not in used_coords:
                 break
         star_symbol = random.choice('+*.:')
-        star = blink(canvas, star_line, star_column, symbol=star_symbol)
+        star = blink(
+            canvas,
+            star_line,
+            star_column,
+            random.randint(1, 30),
+            symbol=star_symbol
+        )
         used_coords.append((star_line, star_column))
         stars.append(star)
 

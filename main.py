@@ -9,6 +9,9 @@ from curses_tools import draw_frame, read_controls, get_frame_size
 
 
 TIC_TIMEOUT = 0.1
+MIN_TIC_OFFSET = 1
+MAX_TIC_OFFSET = 30
+ANIMATION_REPEAT_RATE = 2
 
 
 async def blink(canvas, row, column, offset_tics, symbol='*'):
@@ -69,9 +72,11 @@ async def animate_spaceship(canvas, start_row, start_column, animation_frames):
     frame_sizes = [get_frame_size(frame) for frame in animation_frames]
     max_ship_height = max(frame_sizes, key=lambda x: x[0])[0]
     max_ship_width = max(frame_sizes, key=lambda x: x[1])[1]
-    frames = [frame for frame in animation_frames for _ in range(2)]
+    doubled_frames = [
+        f for f in animation_frames for _ in range(ANIMATION_REPEAT_RATE)
+    ]
 
-    for frame in cycle(frames):
+    for frame in cycle(doubled_frames):
         rows_dir, columns_dir, space_pressed = read_controls(canvas)
         new_row = start_row + rows_dir
         new_column = start_column + columns_dir
@@ -94,10 +99,12 @@ def get_stars(canvas, line_number, column_number):
     window_square = line_number * column_number
     stars = []
     used_coords = []
+    first_line, first_column = 1, 1
+    last_line, last_column = line_number - 1, column_number - 1
     for _ in range(int(window_square / 10)):
         while True:
-            star_line = random.randint(1, line_number - 2)
-            star_column = random.randint(1, column_number - 2)
+            star_line = random.randint(first_line, last_line)
+            star_column = random.randint(first_column, last_column)
             if (star_line, star_column) not in used_coords:
                 break
         star_symbol = random.choice('+*.:')
@@ -105,7 +112,7 @@ def get_stars(canvas, line_number, column_number):
             canvas,
             star_line,
             star_column,
-            random.randint(1, 30),
+            random.randint(MIN_TIC_OFFSET, MAX_TIC_OFFSET),
             symbol=star_symbol
         )
         used_coords.append((star_line, star_column))
@@ -137,7 +144,7 @@ def draw(canvas):
     shot = fire(canvas, row, column)
     spaceship_frames = get_spaceship_frames()
     spaceship = animate_spaceship(canvas, row, column, spaceship_frames)
-    coroutines = [shot, *stars]
+    coroutines = [spaceship, shot, *stars]
 
     while True:
         for coroutine in coroutines.copy():
@@ -146,7 +153,6 @@ def draw(canvas):
             except StopIteration:
                 coroutines.remove(coroutine)
 
-        spaceship.send(None)
         canvas.border()
         canvas.refresh()
         time.sleep(TIC_TIMEOUT)

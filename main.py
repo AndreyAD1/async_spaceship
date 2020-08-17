@@ -69,8 +69,9 @@ async def animate_spaceship(canvas, start_row, start_column, animation_frames):
     frame_sizes = [get_frame_size(frame) for frame in animation_frames]
     max_ship_height = max(frame_sizes, key=lambda x: x[0])[0]
     max_ship_width = max(frame_sizes, key=lambda x: x[1])[1]
+    frames = [frame for frame in animation_frames for _ in range(2)]
 
-    for frame in cycle(animation_frames):
+    for frame in cycle(frames):
         rows_dir, columns_dir, space_pressed = read_controls(canvas)
         new_row = start_row + rows_dir
         new_column = start_column + columns_dir
@@ -84,9 +85,9 @@ async def animate_spaceship(canvas, start_row, start_column, animation_frames):
             new_column = column_number - 1 - max_ship_width
 
         start_row, start_column = new_row, new_column
-        draw_frame(canvas, new_row, new_column, frame)
+        draw_frame(canvas, start_row, start_column, frame)
         await asyncio.sleep(0)
-        draw_frame(canvas, new_row, new_column, frame, negative=True)
+        draw_frame(canvas, start_row, start_column, frame, negative=True)
 
 
 def get_stars(canvas, line_number, column_number):

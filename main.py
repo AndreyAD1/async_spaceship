@@ -15,6 +15,16 @@ MAX_TIC_OFFSET = 30
 ANIMATION_REPEAT_RATE = 2
 BORDER_SIZE = 1
 
+SPACESHIP_ANIMATION_FILE_NAMES = ['rocket_frame_1.txt', 'rocket_frame_2.txt']
+GARBAGE_ANIMATION_FILE_NAMES = [
+    'duck.txt',
+    'hubble.txt',
+    'lamp.txt',
+    'trash_large.txt',
+    'trash_small.txt',
+    'trash_xl.txt'
+]
+
 
 async def blink(canvas, row, column, offset_tics, symbol='*'):
     canvas.addstr(row, column, symbol, curses.A_DIM)
@@ -123,10 +133,8 @@ def get_stars(canvas, line_number, column_number):
     return stars
 
 
-def get_spaceship_frames():
-    file_names = ['rocket_frame_1.txt', 'rocket_frame_2.txt']
+def get_frames(file_names):
     frames = []
-
     for file_name in file_names:
         file_path = os.path.join('animation', file_name)
         with open(file_path, 'r') as file:
@@ -144,10 +152,11 @@ def draw(canvas):
     row, column = row_number / 2, column_number / 2
     stars = get_stars(canvas, row_number, column_number)
     shot = fire(canvas, row, column)
-    spaceship_frames = get_spaceship_frames()
+    spaceship_frames = get_frames(SPACESHIP_ANIMATION_FILE_NAMES)
     spaceship = animate_spaceship(canvas, row, column, spaceship_frames)
+    garbage_frames = get_frames(GARBAGE_ANIMATION_FILE_NAMES)
     garbage_bodies = get_garbage_bodies(canvas, garbage_frames)
-    coroutines = [spaceship, shot, *stars, garbage_bodies]
+    coroutines = [spaceship, shot, *stars, *garbage_bodies]
 
     while True:
         for coroutine in coroutines.copy():

@@ -6,6 +6,7 @@ import random
 import time
 
 from curses_tools import draw_frame, read_controls, get_frame_size
+from space_garbage import get_garbage_bodies
 
 
 TIC_TIMEOUT = 0.1
@@ -145,7 +146,8 @@ def draw(canvas):
     shot = fire(canvas, row, column)
     spaceship_frames = get_spaceship_frames()
     spaceship = animate_spaceship(canvas, row, column, spaceship_frames)
-    coroutines = [spaceship, shot, *stars]
+    garbage_bodies = get_garbage_bodies(canvas, garbage_frames)
+    coroutines = [spaceship, shot, *stars, garbage_bodies]
 
     while True:
         for coroutine in coroutines.copy():

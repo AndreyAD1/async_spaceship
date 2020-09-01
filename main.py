@@ -166,11 +166,13 @@ def draw(canvas):
                 coroutines.remove(coroutine)
 
         canvas.refresh()
-        if random.choices([True, False], weights=[1, 5])[0]:
+        canvas.border()
+        time.sleep(TIC_TIMEOUT)
+
+        new_garbage_appears = random.choices([True, False], weights=[1, 10])[0]
+        if new_garbage_appears:
             new_garbage_bodies = get_garbage_bodies(canvas, garbage_frames)
             coroutines.extend(new_garbage_bodies)
-
-        time.sleep(TIC_TIMEOUT)
 
 
 if __name__ == '__main__':

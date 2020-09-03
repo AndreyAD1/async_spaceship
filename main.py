@@ -6,6 +6,7 @@ import random
 import time
 
 from curses_tools import draw_frame, read_controls, get_frame_size
+from physics import update_speed
 from space_garbage import fly_garbage
 
 
@@ -26,6 +27,7 @@ GARBAGE_ANIMATION_FILE_NAMES = [
 ]
 
 coroutines = []
+spaceship_frame = ''
 
 
 async def sleep(tics=1):
@@ -81,32 +83,47 @@ async def fire(canvas, start_row, start_column, rows_speed=-0.3, columns_speed=0
         column += columns_speed
 
 
-async def animate_spaceship(canvas, start_row, start_column, animation_frames):
+async def run_spaceship(canvas, start_row, start_column):
     row_number, column_number = canvas.getmaxyx()
-    frame_sizes = [get_frame_size(frame) for frame in animation_frames]
-    max_ship_height = max(frame_sizes, key=lambda x: x[0])[0]
-    max_ship_width = max(frame_sizes, key=lambda x: x[1])[1]
-    doubled_frames = [
-        f for f in animation_frames for _ in range(ANIMATION_REPEAT_RATE)
-    ]
     max_row = row_number - BORDER_SIZE
     max_column = column_number - BORDER_SIZE
+    row_speed = column_speed = 0
 
-    for frame in cycle(doubled_frames):
-        rows_dir, columns_dir, space_pressed = read_controls(canvas)
-        new_row = start_row + rows_dir
-        new_column = start_column + columns_dir
-        frame_max_row = new_row + max_ship_height
-        frame_max_column = new_column + max_ship_width
-        new_row = min(frame_max_row, max_row) - max_ship_height
-        new_column = min(frame_max_column, max_column) - max_ship_width
+    while True:
+        rows_direction, columns_direction, _ = read_controls(canvas)
+        row_speed, column_speed = update_speed(
+            row_speed,
+            column_speed,
+            rows_direction,
+            columns_direction
+        )
+        new_row = start_row + row_speed
+        new_column = start_column + column_speed
+        ship_height, ship_width = get_frame_size(spaceship_frame)
+        frame_max_row = new_row + ship_height
+        frame_max_column = new_column + ship_width
+        new_row = min(frame_max_row, max_row) - ship_height
+        new_column = min(frame_max_column, max_column) - ship_width
         new_row = max(new_row, BORDER_SIZE)
         new_column = max(new_column, BORDER_SIZE)
 
         start_row, start_column = new_row, new_column
-        draw_frame(canvas, start_row, start_column, frame)
+        draw_frame(canvas, start_row, start_column, spaceship_frame)
         await sleep()
-        draw_frame(canvas, start_row, start_column, frame, negative=True)
+        draw_frame(
+            canvas,
+            start_row,
+            start_column,
+            spaceship_frame,
+            negative=True
+        )
+
+
+async def animate_spaceship(animation_frames):
+    for frame in cycle(animation_frames):
+        global spaceship_frame
+        spaceship_frame = frame
+        await sleep(2)
 
 
 def get_stars(canvas, line_number, column_number):
@@ -172,8 +189,12 @@ def draw(canvas):
     coroutines.append(shot)
 
     spaceship_frames = get_frames(SPACESHIP_ANIMATION_FILE_NAMES)
-    spaceship = animate_spaceship(canvas, row, column, spaceship_frames)
+    spaceship = animate_spaceship(spaceship_frames)
+    spaceship.send(None)
     coroutines.append(spaceship)
+
+    spaceship_motion = run_spaceship(canvas, row, column)
+    coroutines.append(spaceship_motion)
 
     garbage_frames = get_frames(GARBAGE_ANIMATION_FILE_NAMES)
     new_garbage_bodies = fill_orbit_with_garbage(canvas, garbage_frames)

@@ -94,8 +94,8 @@ async def run_spaceship(canvas, start_row, start_column):
         row_speed, column_speed = update_speed(
             row_speed,
             column_speed,
-            rows_direction,
-            columns_direction
+            rows_direction / 10,
+            columns_direction / 10
         )
         new_row = start_row + row_speed
         new_column = start_column + column_speed
@@ -109,14 +109,9 @@ async def run_spaceship(canvas, start_row, start_column):
 
         start_row, start_column = new_row, new_column
         draw_frame(canvas, start_row, start_column, spaceship_frame)
+        drawn_frame = spaceship_frame
         await sleep()
-        draw_frame(
-            canvas,
-            start_row,
-            start_column,
-            spaceship_frame,
-            negative=True
-        )
+        draw_frame(canvas, start_row, start_column, drawn_frame, negative=True)
 
 
 async def animate_spaceship(animation_frames):

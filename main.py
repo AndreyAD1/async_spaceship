@@ -6,7 +6,7 @@ import random
 import time
 
 from curses_tools import draw_frame, read_controls, get_frame_size
-from space_garbage import get_garbage_bodies
+from space_garbage import fly_garbage
 
 
 TIC_TIMEOUT = 0.1
@@ -24,6 +24,8 @@ GARBAGE_ANIMATION_FILE_NAMES = [
     'trash_small.txt',
     'trash_xl.txt'
 ]
+
+coroutines = []
 
 
 async def blink(canvas, row, column, offset_tics, symbol='*'):
@@ -144,19 +146,38 @@ def get_frames(file_names):
     return frames
 
 
+async def fill_orbit_with_garbage(canvas, garbage_frames):
+    _, column_number = canvas.getmaxyx()
+    while True:
+        new_garbage_appears = random.choices([True, False], weights=[1, 6])[0]
+        if new_garbage_appears:
+            garbage_frame = random.choice(garbage_frames)
+            garbage_column = random.randrange(1, column_number)
+            garbage_body = fly_garbage(canvas, garbage_column, garbage_frame)
+            coroutines.append(garbage_body)
+        await asyncio.sleep(0)
+
+
 def draw(canvas):
     canvas.nodelay(True)
     canvas.border()
     curses.curs_set(False)
     row_number, column_number = canvas.getmaxyx()
     row, column = row_number / 2, column_number / 2
+
     stars = get_stars(canvas, row_number, column_number)
+    coroutines.extend(stars)
+
     shot = fire(canvas, row, column)
+    coroutines.append(shot)
+
     spaceship_frames = get_frames(SPACESHIP_ANIMATION_FILE_NAMES)
     spaceship = animate_spaceship(canvas, row, column, spaceship_frames)
+    coroutines.append(spaceship)
+
     garbage_frames = get_frames(GARBAGE_ANIMATION_FILE_NAMES)
-    garbage_bodies = get_garbage_bodies(canvas, garbage_frames)
-    coroutines = [spaceship, shot, *stars, *garbage_bodies]
+    new_garbage_bodies = fill_orbit_with_garbage(canvas, garbage_frames)
+    coroutines.append(new_garbage_bodies)
 
     while True:
         for coroutine in coroutines.copy():
@@ -168,11 +189,6 @@ def draw(canvas):
         canvas.refresh()
         canvas.border()
         time.sleep(TIC_TIMEOUT)
-
-        new_garbage_appears = random.choices([True, False], weights=[1, 10])[0]
-        if new_garbage_appears:
-            new_garbage_bodies = get_garbage_bodies(canvas, garbage_frames)
-            coroutines.extend(new_garbage_bodies)
 
 
 if __name__ == '__main__':

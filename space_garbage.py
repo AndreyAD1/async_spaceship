@@ -1,5 +1,4 @@
 import asyncio
-import random
 
 from curses_tools import draw_frame
 

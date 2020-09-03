@@ -28,27 +28,27 @@ GARBAGE_ANIMATION_FILE_NAMES = [
 coroutines = []
 
 
+async def sleep(tics=1):
+    for _ in range(tics):
+        await asyncio.sleep(0)
+
+
 async def blink(canvas, row, column, offset_tics, symbol='*'):
     canvas.addstr(row, column, symbol, curses.A_DIM)
-    for _ in range(offset_tics):
-        await asyncio.sleep(0)
+    await sleep(offset_tics)
 
     while True:
         canvas.addstr(row, column, symbol)
-        for _ in range(3):
-            await asyncio.sleep(0)
+        await sleep(3)
 
         canvas.addstr(row, column, symbol, curses.A_BOLD)
-        for _ in range(5):
-            await asyncio.sleep(0)
+        await sleep(5)
 
         canvas.addstr(row, column, symbol)
-        for _ in range(3):
-            await asyncio.sleep(0)
+        await sleep(3)
 
         canvas.addstr(row, column, symbol, curses.A_DIM)
-        for _ in range(20):
-            await asyncio.sleep(0)
+        await sleep(20)
 
 
 async def fire(canvas, start_row, start_column, rows_speed=-0.3, columns_speed=0):
@@ -57,10 +57,10 @@ async def fire(canvas, start_row, start_column, rows_speed=-0.3, columns_speed=0
     row, column = start_row, start_column
 
     canvas.addstr(round(row), round(column), '*')
-    await asyncio.sleep(0)
+    await sleep()
 
     canvas.addstr(round(row), round(column), 'O')
-    await asyncio.sleep(0)
+    await sleep()
     canvas.addstr(round(row), round(column), ' ')
 
     row += rows_speed
@@ -75,7 +75,7 @@ async def fire(canvas, start_row, start_column, rows_speed=-0.3, columns_speed=0
 
     while 0 < row < max_row and 0 < column < max_column:
         canvas.addstr(round(row), round(column), symbol)
-        await asyncio.sleep(0)
+        await sleep()
         canvas.addstr(round(row), round(column), ' ')
         row += rows_speed
         column += columns_speed
@@ -105,7 +105,7 @@ async def animate_spaceship(canvas, start_row, start_column, animation_frames):
 
         start_row, start_column = new_row, new_column
         draw_frame(canvas, start_row, start_column, frame)
-        await asyncio.sleep(0)
+        await sleep()
         draw_frame(canvas, start_row, start_column, frame, negative=True)
 
 
@@ -155,7 +155,7 @@ async def fill_orbit_with_garbage(canvas, garbage_frames):
             garbage_column = random.randrange(1, column_number)
             garbage_body = fly_garbage(canvas, garbage_column, garbage_frame)
             coroutines.append(garbage_body)
-        await asyncio.sleep(0)
+        await sleep()
 
 
 def draw(canvas):

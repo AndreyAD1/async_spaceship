@@ -183,8 +183,9 @@ async def fly_garbage(canvas, column, garbage_frame, speed=0.5):
 
     column = max(column, 0)
     column = min(column, columns_number - 1)
+    obstacle_height, obstacle_width = get_frame_size(garbage_frame)
     obstacle = Obstacle(
-        row,
+        0,
         column,
         rows_size=obstacle_height,
         columns_size=obstacle_width
@@ -198,6 +199,7 @@ async def fly_garbage(canvas, column, garbage_frame, speed=0.5):
         await asyncio.sleep(0)
         draw_frame(canvas, row, column, garbage_frame, negative=True)
         row += speed
+        obstacle.row = row
 
 
 async def show_obstacles(canvas):

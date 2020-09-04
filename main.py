@@ -15,6 +15,7 @@ MIN_TIC_OFFSET = 1
 MAX_TIC_OFFSET = 30
 ANIMATION_REPEAT_RATE = 2
 BORDER_SIZE = 1
+OFFSET_TO_SPACESHIP_EDGE = 2
 
 SPACESHIP_ANIMATION_FILE_NAMES = ['rocket_frame_1.txt', 'rocket_frame_2.txt']
 GARBAGE_ANIMATION_FILE_NAMES = [
@@ -90,7 +91,7 @@ async def run_spaceship(canvas, start_row, start_column):
     row_speed = column_speed = 0
 
     while True:
-        rows_direction, columns_direction, _ = read_controls(canvas)
+        rows_direction, columns_direction, pressed_space = read_controls(canvas)
         row_speed, column_speed = update_speed(
             row_speed,
             column_speed,
@@ -110,6 +111,11 @@ async def run_spaceship(canvas, start_row, start_column):
         start_row, start_column = new_row, new_column
         draw_frame(canvas, start_row, start_column, spaceship_frame)
         drawn_frame = spaceship_frame
+
+        if pressed_space:
+            fire_column = start_column + OFFSET_TO_SPACESHIP_EDGE
+            coroutines.append(fire(canvas, start_row, fire_column))
+
         await sleep()
         draw_frame(canvas, start_row, start_column, drawn_frame, negative=True)
 
@@ -179,9 +185,6 @@ def draw(canvas):
 
     stars = get_stars(canvas, row_number, column_number)
     coroutines.extend(stars)
-
-    shot = fire(canvas, row, column)
-    coroutines.append(shot)
 
     spaceship_frames = get_frames(SPACESHIP_ANIMATION_FILE_NAMES)
     spaceship = animate_spaceship(spaceship_frames)

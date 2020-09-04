@@ -6,8 +6,8 @@ import random
 import time
 
 from curses_tools import draw_frame, read_controls, get_frame_size
+from obstacles import Obstacle
 from physics import update_speed
-from space_garbage import fly_garbage
 
 
 TIC_TIMEOUT = 0.1
@@ -28,6 +28,7 @@ GARBAGE_ANIMATION_FILE_NAMES = [
 ]
 
 coroutines = []
+obstacles = []
 spaceship_frame = ''
 
 
@@ -176,6 +177,47 @@ async def fill_orbit_with_garbage(canvas, garbage_frames):
         await sleep()
 
 
+async def fly_garbage(canvas, column, garbage_frame, speed=0.5):
+    """Animate garbage, flying from top to bottom. Сolumn position will stay same, as specified on start."""
+    rows_number, columns_number = canvas.getmaxyx()
+
+    column = max(column, 0)
+    column = min(column, columns_number - 1)
+    obstacle = Obstacle(
+        row,
+        column,
+        rows_size=obstacle_height,
+        columns_size=obstacle_width
+    )
+    obstacles.append(obstacle)
+
+    row = 0
+
+    while row < rows_number:
+        draw_frame(canvas, row, column, garbage_frame)
+        await asyncio.sleep(0)
+        draw_frame(canvas, row, column, garbage_frame, negative=True)
+        row += speed
+
+
+async def show_obstacles(canvas):
+    """Display bounding boxes of every obstacle in a list"""
+
+    while True:
+        boxes = []
+
+        for obstacle in obstacles:
+            boxes.append(obstacle.dump_bounding_box())
+
+        for row, column, frame in boxes:
+            draw_frame(canvas, row, column, frame)
+
+        await asyncio.sleep(0)
+
+        for row, column, frame in boxes:
+            draw_frame(canvas, row, column, frame, negative=True)
+
+
 def draw(canvas):
     canvas.nodelay(True)
     canvas.border()
@@ -197,6 +239,8 @@ def draw(canvas):
     garbage_frames = get_frames(GARBAGE_ANIMATION_FILE_NAMES)
     new_garbage_bodies = fill_orbit_with_garbage(canvas, garbage_frames)
     coroutines.append(new_garbage_bodies)
+    obstacle_borders = show_obstacles(canvas)
+    coroutines.append(obstacle_borders)
 
     while True:
         for coroutine in coroutines.copy():

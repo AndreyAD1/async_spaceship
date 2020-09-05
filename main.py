@@ -7,8 +7,10 @@ import time
 
 from curses_tools import draw_frame, read_controls, get_frame_size
 from explosion import explode
+from game_over import show_gameover
 from obstacles import Obstacle
 from physics import update_speed
+from sleep import sleep
 
 
 TIC_TIMEOUT = 0.1
@@ -32,11 +34,6 @@ coroutines = []
 obstacles = []
 obstacles_in_last_collisions = []
 spaceship_frame = ''
-
-
-async def sleep(tics=1):
-    for _ in range(tics):
-        await asyncio.sleep(0)
 
 
 async def blink(canvas, row, column, offset_tics, symbol='*'):
@@ -126,6 +123,11 @@ async def run_spaceship(canvas, start_row, start_column):
 
         await sleep()
         draw_frame(canvas, start_row, start_column, drawn_frame, negative=True)
+
+        if any([o.has_collision(start_row, start_column) for o in obstacles]):
+            break
+
+    await show_gameover(canvas)
 
 
 async def animate_spaceship(animation_frames):

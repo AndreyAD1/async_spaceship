@@ -29,6 +29,7 @@ GARBAGE_ANIMATION_FILE_NAMES = [
 
 coroutines = []
 obstacles = []
+obstacles_in_last_collisions = []
 spaceship_frame = ''
 
 
@@ -80,6 +81,7 @@ async def fire(canvas, start_row, start_column, rows_speed=-0.3, columns_speed=0
     while 0 < row < max_row and 0 < column < max_column:
         for obstacle in obstacles:
             if obstacle.has_collision(row, column):
+                obstacles_in_last_collisions.append(obstacle)
                 return
 
         canvas.addstr(round(row), round(column), symbol)
@@ -198,12 +200,15 @@ async def fly_garbage(canvas, column, garbage_frame, speed=0.5):
 
     row = 0
 
-    while row < rows_number:
+    while row < rows_number and obstacle not in obstacles_in_last_collisions:
         draw_frame(canvas, row, column, garbage_frame)
         await asyncio.sleep(0)
         draw_frame(canvas, row, column, garbage_frame, negative=True)
         row += speed
         obstacle.row = row
+
+    if obstacle in obstacles_in_last_collisions:
+        obstacles_in_last_collisions.remove(obstacle)
 
     obstacles.remove(obstacle)
 

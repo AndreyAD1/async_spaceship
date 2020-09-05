@@ -124,7 +124,16 @@ async def run_spaceship(canvas, start_row, start_column):
         await sleep()
         draw_frame(canvas, start_row, start_column, drawn_frame, negative=True)
 
-        if any([o.has_collision(start_row, start_column) for o in obstacles]):
+        ship_collided = False
+        for obstacle in obstacles:
+            ship_collided = ship_collided or obstacle.has_collision(
+                start_row,
+                start_column,
+                obj_size_rows=ship_height,
+                obj_size_columns=ship_width
+            )
+
+        if ship_collided:
             break
 
     await show_gameover(canvas)

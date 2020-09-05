@@ -201,6 +201,8 @@ async def fly_garbage(canvas, column, garbage_frame, speed=0.5):
         row += speed
         obstacle.row = row
 
+    obstacles.remove(obstacle)
+
 
 async def show_obstacles(canvas):
     """Display bounding boxes of every obstacle in a list"""

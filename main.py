@@ -21,8 +21,8 @@ ANIMATION_REPEAT_RATE = 2
 BORDER_SIZE = 1
 OFFSET_TO_SPACESHIP_EDGE = 2
 SECONDS_PER_YEAR = 1.5
-YEAR_TITLE_HEIGHT = 4
-YEAR_TITLE_WIDTH = 40
+YEAR_WINDOW_HEIGHT = 4
+YEAR_WINDOW_WIDTH = 40
 GUN_YEAR = 2020
 
 SPACESHIP_ANIMATION_FILE_NAMES = ['rocket_frame_1.txt', 'rocket_frame_2.txt']
@@ -70,15 +70,21 @@ async def change_year():
 async def draw_year(canvas):
     global year
     shown_message = ''
+    year_row = label_column = 1
+    message_row = 2
     while True:
-        canvas.addstr(1, 1, str(year))
+        canvas.addstr(year_row, label_column, str(year))
         year_message = PHRASES.get(year)
         if year_message:
-            canvas.addstr(2, 1, year_message)
+            canvas.addstr(message_row, label_column, year_message)
             shown_message = year_message
 
         if shown_message and not year_message:
-            canvas.addstr(2, 1, ' ' * (YEAR_TITLE_WIDTH - 2))
+            canvas.addstr(
+                message_row,
+                label_column,
+                ' ' * (YEAR_WINDOW_WIDTH - label_column)
+            )
             shown_message = ''
 
         await sleep()
@@ -296,10 +302,10 @@ def draw(canvas):
     obstacle_borders = show_obstacles(canvas)
 
     year_canvas = canvas.derwin(
-        YEAR_TITLE_HEIGHT,
-        YEAR_TITLE_WIDTH,
-        row_number - YEAR_TITLE_HEIGHT,
-        column_number - YEAR_TITLE_WIDTH
+        YEAR_WINDOW_HEIGHT,
+        YEAR_WINDOW_WIDTH,
+        row_number - YEAR_WINDOW_HEIGHT,
+        column_number - YEAR_WINDOW_WIDTH
     )
     year_title = draw_year(year_canvas)
 

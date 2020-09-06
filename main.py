@@ -23,6 +23,7 @@ OFFSET_TO_SPACESHIP_EDGE = 2
 SECONDS_PER_YEAR = 1.5
 YEAR_TITLE_HEIGHT = 4
 YEAR_TITLE_WIDTH = 40
+GUN_YEAR = 2020
 
 SPACESHIP_ANIMATION_FILE_NAMES = ['rocket_frame_1.txt', 'rocket_frame_2.txt']
 GARBAGE_ANIMATION_FILE_NAMES = [
@@ -146,7 +147,7 @@ async def run_spaceship(canvas, start_row, start_column):
         draw_frame(canvas, start_row, start_column, spaceship_frame)
         drawn_frame = spaceship_frame
 
-        if pressed_space:
+        if pressed_space and year >= GUN_YEAR:
             fire_column = start_column + OFFSET_TO_SPACESHIP_EDGE
             coroutines.append(fire(canvas, start_row, fire_column))
 

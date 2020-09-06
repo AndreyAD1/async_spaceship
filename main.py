@@ -250,25 +250,29 @@ def draw(canvas):
     canvas.nodelay(True)
     canvas.border()
     curses.curs_set(False)
-    row_number, column_number = canvas.getmaxyx()
-    row, column = row_number / 2, column_number / 2
 
+    row_number, column_number = canvas.getmaxyx()
     stars = get_stars(canvas, row_number, column_number)
-    coroutines.extend(stars)
 
     spaceship_frames = get_frames(SPACESHIP_ANIMATION_FILE_NAMES)
     spaceship = animate_spaceship(spaceship_frames)
-    spaceship.send(None)
-    coroutines.append(spaceship)
 
+    row, column = row_number / 2, column_number / 2
     spaceship_motion = run_spaceship(canvas, row, column)
-    coroutines.append(spaceship_motion)
 
     garbage_frames = get_frames(GARBAGE_ANIMATION_FILE_NAMES)
-    new_garbage_bodies = fill_orbit_with_garbage(canvas, garbage_frames)
-    coroutines.append(new_garbage_bodies)
+    new_garbage = fill_orbit_with_garbage(canvas, garbage_frames)
+
     obstacle_borders = show_obstacles(canvas)
-    coroutines.append(obstacle_borders)
+
+    initial_coroutines = [
+        *stars,
+        spaceship,
+        spaceship_motion,
+        new_garbage,
+        obstacle_borders
+    ]
+    coroutines.extend(initial_coroutines)
 
     while True:
         for coroutine in coroutines.copy():

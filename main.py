@@ -299,8 +299,6 @@ def draw(canvas):
     garbage_frames = get_frames(GARBAGE_ANIMATION_FILE_NAMES)
     new_garbage = fill_orbit_with_garbage(canvas, garbage_frames)
 
-    obstacle_borders = show_obstacles(canvas)
-
     year_canvas = canvas.derwin(
         YEAR_WINDOW_HEIGHT,
         YEAR_WINDOW_WIDTH,
@@ -314,7 +312,6 @@ def draw(canvas):
         spaceship,
         spaceship_motion,
         new_garbage,
-        obstacle_borders,
         change_year(),
         year_title
     ]

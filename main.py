@@ -8,7 +8,7 @@ import time
 from curses_tools import draw_frame, read_controls, get_frame_size
 from explosion import explode
 from game_over import show_gameover
-from game_scenario import get_garbage_delay_tics
+from game_scenario import get_garbage_delay_tics, PHRASES
 from obstacles import Obstacle
 from physics import update_speed
 from sleep import sleep
@@ -21,8 +21,8 @@ ANIMATION_REPEAT_RATE = 2
 BORDER_SIZE = 1
 OFFSET_TO_SPACESHIP_EDGE = 2
 SECONDS_PER_YEAR = 1.5
-YEAR_TITLE_HEIGHT = 5
-YEAR_TITLE_WIDTH = 10
+YEAR_TITLE_HEIGHT = 4
+YEAR_TITLE_WIDTH = 40
 
 SPACESHIP_ANIMATION_FILE_NAMES = ['rocket_frame_1.txt', 'rocket_frame_2.txt']
 GARBAGE_ANIMATION_FILE_NAMES = [
@@ -68,8 +68,18 @@ async def change_year():
 
 async def draw_year(canvas):
     global year
+    shown_message = ''
     while True:
-        canvas.addstr(2, 2, str(year))
+        canvas.addstr(1, 1, str(year))
+        year_message = PHRASES.get(year)
+        if year_message:
+            canvas.addstr(2, 1, year_message)
+            shown_message = year_message
+
+        if shown_message and not year_message:
+            canvas.addstr(2, 1, ' ' * (YEAR_TITLE_WIDTH - 2))
+            shown_message = ''
+
         await sleep()
 
 
